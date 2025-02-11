@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatBot Web APP</title>
+</head>
+<body>
+    <h2>ChatBot</h2>
+    <textarea id="userInput" placeholder="輸入訊息..."></textarea>
+    <button onclick="sendMessage()">發送</button>
+    <p><strong>回應：</strong><span id="response"></span></p>
+
+    <script>
+        async function sendMessage() {
+            let message = document.getElementById("userInput").value;
+            let responseElement = document.getElementById("response");
+
+            let response = await fetch("http://localhost:8000/chat/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: message })
+            });
+
+            let result = await response.json();
+            responseElement.innerText = result.reply || result.error;
+        }
+    </script>
+</body>
+</html>
