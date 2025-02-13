@@ -4,9 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from config import Settings
-
-import requests
-import os
+from google import genai
+from google.genai import types
 
 app = FastAPI()
 
@@ -14,31 +13,39 @@ settings = Settings()
 app.mount("/static", StaticFiles(directory="static"))
 templates = Jinja2Templates(directory="templates")
 
-# 這裡以 OpenAI GPT API 作為範例
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "your-api-key-here")
+# 初始化 Google Gemini 客戶端
+try:
+    client = genai.Client(api_key=settings.genai_api_key)
+    chat = client.chats.create(
+        model="gemini-2.0-flash", 
+        config=types.GenerateContentConfig(
+            max_output_tokens=200,
+            temperature=0.5
+        )
+    )
+except Exception as e:
+    print(f"初始化 Google Gemini 客戶端失敗: {e}")
+    exit(1)
+
 
 class ChatRequest(BaseModel):
     message: str
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    print(settings.app_name)
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/chat/")
 async def chat_with_ai(chat_request: ChatRequest):
-    """向 OpenAI ChatGPT 發送請求"""
+    """向 Gemini AI 發送請求"""
+    try:
+        response = chat.send_message(chat_request.message)
 
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
-    payload = {
-        "model": "gpt-3.5-turbo",
-        "messages": [{"role": "user", "content": chat_request.message}]
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    
-    if response.status_code == 200:
-        reply = response.json()["choices"][0]["message"]["content"]
-        return {"reply": reply}
-    else:
-        return {"error": "AI 服務無法回應", "status_code": response.status_code}
+        if hasattr(response, "text") and response.text:
+            return {"reply": response.text}
+        else:
+            raise ValueError("API 回應格式異常，未找到 `text` 屬性")
+    except Exception as e:
+        print(f"未知錯誤: {e}")
+        
+    return {"error": "AI 服務無法回應"}
