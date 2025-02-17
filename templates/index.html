@@ -3,28 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatBot Web APP</title>
+    <title>AI問答機器人</title>
+    <style>
+        body{
+            background:#1c1c1c;
+        }
+        h2{
+            color:white;
+            padding: 0px 5px;
+        }
+    </style>
+    <!-- vue2 -->
+    <script src="/static/plugins/vue.js"></script>
+    <!-- vue-advanced-chat -->
+    <script src="/static/plugins/vue-advanced-chat.js"></script>
 </head>
 <body>
-    <h2>ChatBot</h2>
-    <textarea id="userInput" placeholder="輸入訊息..."></textarea>
-    <button onclick="sendMessage()">發送</button>
-    <p><strong>回應：</strong><span id="response"></span></p>
-
-    <script>
-        async function sendMessage() {
-            let message = document.getElementById("userInput").value;
-            let responseElement = document.getElementById("response");
-
-            let response = await fetch("http://localhost:8000/chat/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: message })
-            });
-
-            let result = await response.json();
-            responseElement.innerText = result.reply || result.error;
-        }
-    </script>
+    <div id="main_content">
+        <div style="padding:10px;">
+            <h2>AI問答機器人</h2>
+            <div style="border-radius:10px;overflow:hidden;">
+                <vue-advanced-chat
+                    height="calc(100vh - 100px)"
+                    :current-user-id="currentUserId"
+                    :rooms="JSON.stringify(rooms)"
+                    :messages="JSON.stringify(messages)"
+                    :messages-loaded="messagesLoaded"
+                    single-room="true"
+                    show-files="false"
+                    show-audio="false"
+                    show-emojis="false"
+                    show-reaction-emojis="false"
+                    v-on:send-message="sendMessage($event.detail[0])"
+                />
+            </div>
+        </div>
+    </div>
 </body>
+
+<!-- custom js -->
+<script src="/static/js/index.js"></script>
 </html>
