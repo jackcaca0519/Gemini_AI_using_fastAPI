@@ -36,7 +36,7 @@ async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/chat/")
-async def chat_with_ai(chat_request: ChatRequest):
+def chat_with_ai(chat_request: ChatRequest):
     """向 Gemini AI 發送請求"""
     try:
         response = chat.send_message(chat_request.message)
