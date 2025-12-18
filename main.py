@@ -2,12 +2,22 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from config import Settings
 from google import genai
 from google.genai import types
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8000", "http://127.0.0.1:8000"],  # Allow both localhost and 127.0.0.1
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 settings = Settings()
 app.mount("/static", StaticFiles(directory="static"))
@@ -17,7 +27,7 @@ templates = Jinja2Templates(directory="templates")
 try:
     client = genai.Client(api_key=settings.genai_api_key)
     chat = client.chats.create(
-        model="gemini-2.0-flash", 
+        model="gemini-2.5-flash", 
         config=types.GenerateContentConfig(
             max_output_tokens=200,
             temperature=0.5
